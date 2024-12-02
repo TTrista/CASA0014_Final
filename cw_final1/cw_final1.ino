@@ -3,7 +3,7 @@
 #include <utility/wifi_drv.h> // library to drive to RGB LED on the MKR1010
 #include "arduino_secrets.h"
 
-// Sensors pin
+// Sensor pins
 #define TRIG_PIN 1
 #define ECHO_PIN 2
 #define NUM_PIXELS 12 // Define the number of pixels in the light strip
@@ -16,15 +16,11 @@ const char* mqtt_password = SECRET_MQTTPASS;
 const char* mqtt_server   = "mqtt.cetools.org";
 const int mqtt_port       = 1884;
 
-const char* mqtt_topic_demo = "student/CASA0014/light/12/pixel/"; // Fixed MQTT topic
-const char* mqtt_brightness_topic = "student/CASA0014/light/12/brightness/"; // Fixed brightness topic
+const char* mqtt_topic_demo = "student/CASA0014/light/51/pixel/"; // Fixed MQTT topic
+const char* mqtt_brightness_topic = "student/CASA0014/light/51/brightness/"; // Brightness control topic
 
 WiFiClient wificlient;
 PubSubClient client(wificlient);
-
-// Distance tracking variables
-long lastTime = 0;
-float lastDistance = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -55,7 +51,7 @@ void loop() {
   Serial.print(distance);
   Serial.println(" cm");
 
-  // Color and wave effect based on distance
+  // Color control based on distance
   if (distance > 300) {
     sendMQTTMessage(245, 50, 245); // Pink
   } else if (distance > 40 && distance <= 300) {
@@ -80,33 +76,34 @@ float getDistance() {
   return duration * 0.034 / 2; // Convert to cm
 }
 
-// Send color message via MQTT
+// Send MQTT message to set light color
 void sendMQTTMessage(int r, int g, int b) {
   for (int pixel = 0; pixel < NUM_PIXELS; pixel++) {
     char mqtt_message[100];
     sprintf(mqtt_message, "{\"pixelid\": %d, \"R\": %d, \"G\": %d, \"B\": %d, \"W\": %d}", pixel, r, g, b, 0);
 
     if (client.publish(mqtt_topic_demo, mqtt_message)) {
-      Serial.println("Message published");
+      Serial.print("Message published for pixel ");
+      Serial.println(pixel);
     } else {
       Serial.println("Failed to publish message");
     }
-    delay(10); // Small delay for broker
+    delay(10); // Small delay to avoid overwhelming MQTT broker
   }
 }
 
-// Wave effect with brightness adjustment
+// Wave effect for blue zone
 void sendWaveEffect() {
   // Brightness increase
   for (int i = 0; i <= 120; i++) {
     setBrightness(i);
-    delay(50); // Control wave speed
+    delay(50); // Adjust wave speed
   }
 
   // Brightness decrease
   for (int i = 120; i >= 0; i--) {
     setBrightness(i);
-    delay(50); // Control wave speed
+    delay(50); // Adjust wave speed
   }
 }
 
@@ -122,29 +119,16 @@ void setBrightness(int brightness) {
   }
 }
 
-// Clear all pixels
-void clearAllPixels() {
-  for (int pixel = 0; pixel < NUM_PIXELS; pixel++) {
-    char mqtt_message[100];
-    sprintf(mqtt_message, "{\"pixelid\": %d, \"R\": 0, \"G\": 0, \"B\": 0, \"W\": 0}", pixel);
-    if (client.publish(mqtt_topic_demo, mqtt_message)) {
-      Serial.println("Pixels cleared");
-    } else {
-      Serial.println("Failed to clear pixels");
-    }
-  }
-}
-
 // Reconnect to MQTT broker
 void reconnectMQTT() {
   while (!client.connected()) {
     Serial.print("Connecting to MQTT...");
     if (client.connect("MKR1010", mqtt_username, mqtt_password)) {
-      Serial.println("connected");
+      Serial.println("Connected to MQTT");
     } else {
-      Serial.print("failed, rc=");
+      Serial.print("Failed to connect, rc=");
       Serial.print(client.state());
-      Serial.println(" retrying in 5 seconds");
+      Serial.println(" Trying again in 5 seconds...");
       delay(5000);
     }
   }
