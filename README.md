@@ -12,6 +12,7 @@ A comprehensive IoT project designed to visualize the usage status of soldering 
 - [Features](#features)
 - [Future Enhancements](#future-enhancements)
 
+<img src="D:\UCL_CE_Term1\CASA0014\CASA0014_Final\Pictures\picture1.png" width="500" height="200"/> 
 ---
 
 ## Introduction
@@ -49,6 +50,8 @@ The **Solder Station Usage Visualizer** is a simple yet effective tool to solve 
 - Breadboard and jumper wires for connections.
 - USB power supply (5V) for the MKR1010.
 
+
+<img src="D:\UCL_CE_Term1\CASA0014\CASA0014_Final\Pictures\picture2.png" width="500" height="200"/> 
 ---
 
 ## Software Details
